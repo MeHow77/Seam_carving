@@ -2,4 +2,5 @@ cmake-build-*
 *.swp
 *.swo
 .idea/
+build/
 Session.vim
