@@ -49,6 +49,13 @@ uchar getMinimum(const std::vector<uchar>& vals){
     return min;
 }
 
+cv::Mat horizontalCumulativeMat(const cv::Mat &image){
+    cv::Mat rotated;
+    cv::rotate(image, rotated, cv::ROTATE_90_CLOCKWISE);
+    rotated = verticalCumulativeMat(rotated);
+    cv::rotate(rotated, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
+    return rotated;
+}
 
 
 cv::Mat seamCarving(const cv::Mat& image, const cv::Size& out_size) {
