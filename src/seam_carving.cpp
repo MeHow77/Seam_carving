@@ -20,6 +20,37 @@ cv::Mat calc_e1(const cv::Mat &image){
     return e1;
 }
 
+cv::Mat verticalCumulativeMat(const cv::Mat &image){
+    // DP: cv::Mat cache(cv::Size(image.rows,image.cols), CV_8UC1, cv::Scalar(0));
+    //cache.at<uchar>(0,0) = 1;
+    int nRows = image.rows;
+    int nCols = image.cols;
+
+    cv::Mat res = image.clone();
+    const uchar* row;
+    std::vector<uchar> validVals;
+
+    for(int i=1; i<nRows; i++){
+        row = res.ptr<uchar>(i - 1);
+        validVals = {row[0], row[1]};
+        res.at<uchar>(i,0) += getMinimum(validVals);
+        for(int j=1; j<nCols-1; j++) {
+            validVals = {row[j - 1], row[j], row[j+1]};
+            res.at<uchar>(i,j) += getMinimum(validVals);
+        }
+        validVals = {row[nCols-2], row[nCols-1]};
+        res.at<uchar>(i,nCols-1) += getMinimum(validVals);
+    }
+    return res;
+}
+
+uchar getMinimum(const std::vector<uchar>& vals){
+    auto min = *std::min_element(vals.begin(), vals.end());
+    return min;
+}
+
+
+
 cv::Mat seamCarving(const cv::Mat& image, const cv::Size& out_size) {
   (void)out_size;
   return image;
