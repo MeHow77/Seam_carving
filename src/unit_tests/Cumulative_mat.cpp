@@ -30,3 +30,23 @@ TEST(testMat, horizontalSum){
     bool eq = cv::countNonZero(diff) == 0;
     ASSERT_TRUE(eq);
 }
+
+TEST(testMat, verticalSeam){
+    uchar dataI[5][4] = {{3, 6, 2, 5}, {12, 11, 10, 8}, {15, 16, 14, 18}, {25, 19, 30, 25}, {23, 30, 26, 29}};
+    cv::Mat I = cv::Mat(5,4, CV_8UC1, dataI);
+    std::vector<std::pair<int, int>> seamResult {{4,0}, {3,1}, {2,2}, {1,3}, {0,2}};
+
+    auto seamOutput = findVerticalSeam(I);
+    bool res = seamOutput == seamResult;
+    ASSERT_TRUE(res);
+}
+
+TEST(testMat, horizontalSeam){
+    uchar dataI[3][5] = {{1, 2, 7, 14, 18}, {5, 8, 10, 16, 24}, {11, 17, 21, 24, 31}};
+    cv::Mat I = cv::Mat(3,5, CV_8UC1, dataI);
+    std::vector<std::pair<int, int>> seamResult {{0,4}, {0,3}, {0,2}, {0,1}, {0,0}};
+
+    auto seamOutput = findHorizontalSeam(I);
+    bool res = seamOutput == seamResult;
+    ASSERT_TRUE(res);
+}
