@@ -21,6 +21,26 @@ cv::Mat calc_e1(const cv::Mat &image){
     return e1;
 }
 
+cv::Mat calcGrad(const cv::Mat &image){
+    cv::Mat srcBlur;
+    cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
+    if (srcBlur.channels()==3){
+        cv::cvtColor(srcBlur, srcBlur, cv::COLOR_BGR2GRAY);
+    }
+    int kernelY[9] = {3,0,-3,10,0,-10,3,0,3};
+    float kernelX[9] = {3,10,3,0,0,0,-3,-10,-3};
+    cv::Mat filterY(3, 3, CV_32F, kernelY);
+    cv::Mat filterX(3, 3, CV_32F, kernelX);
+    cv::Mat dstx, dsty, absY, absX, gradMat;
+    filter2D(srcBlur,dsty, CV_64F,filterY, cv::Point( -1, -1 ),0, cv::BORDER_DEFAULT );
+    filter2D(srcBlur,dstx, CV_64F,filterX, cv::Point( -1, -1 ),0, cv::BORDER_DEFAULT );
+    cv::convertScaleAbs(dstx, absX);
+    cv::convertScaleAbs(dsty, absY);
+    cv::add(absY, absX, gradMat);
+    return gradMat;
+}
+
+
 uchar getMinimum(const std::vector<uchar>& vals){
     auto min = *std::min_element(vals.begin(), vals.end());
     return min;

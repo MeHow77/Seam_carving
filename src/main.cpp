@@ -11,7 +11,7 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
-    auto e1 = calc_e1(in);
+    auto e1 = calcGrad(in);
     auto m = verticalCumulativeMat(e1);
 
     int carveScale = 200;
