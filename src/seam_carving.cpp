@@ -1,3 +1,4 @@
+#include <numeric>
 #include "seam_carving.h"
 cv::Mat calc_e1(const cv::Mat &image){
     int ddepth = CV_16S;
@@ -18,6 +19,16 @@ cv::Mat calc_e1(const cv::Mat &image){
 
     cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, e1);
     return e1;
+}
+
+uchar getMinimum(const std::vector<uchar>& vals){
+    auto min = *std::min_element(vals.begin(), vals.end());
+    return min;
+}
+
+uchar getMinimumIndex(const std::vector<uchar>& vals){
+    auto min = std::min_element(vals.begin(), vals.end()) - vals.begin();
+    return min;
 }
 
 cv::Mat verticalCumulativeMat(const cv::Mat &image){
@@ -42,11 +53,6 @@ cv::Mat verticalCumulativeMat(const cv::Mat &image){
         res.at<uchar>(i,nCols-1) += getMinimum(validVals);
     }
     return res;
-}
-
-uchar getMinimum(const std::vector<uchar>& vals){
-    auto min = *std::min_element(vals.begin(), vals.end());
-    return min;
 }
 
 cv::Mat horizontalCumulativeMat(const cv::Mat &image){
