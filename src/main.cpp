@@ -11,21 +11,21 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
-    auto e1 = calcGrad(in);
-    auto m = verticalCumulativeMat(e1);
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+    cv::Mat e1, m;
 
-    int carveScale = 200;
-    //auto seamsStart = partialSortIndexes(m.row(m.rows-1), carveScale);
+    int carveScale = 100;
+    auto start = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
+        e1 = calc_e1(image);
+        m = verticalCumulativeMat(e1);
         auto seam = findVerticalSeam(m);
-        m = carveVerticalSeam(m, seam);
-        e1 = carveVerticalSeam(e1, seam);
+        image = carveVerticalSeam<uchar>(image, seam);
     }
-//    for (auto p : seam){
-//        cv::circle(in, cv::Point(p.second, p.first), 1, CV_RGB(255, 0, 0), 1);
-//    }
-    display_img(in);
-    display_img(e1);
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken by function: "
+         << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
+    display_img(image);
 
   return 0;
 }
