@@ -1,11 +1,12 @@
 #include "seam_carving.h"
 namespace sc {
-    void calc_e1(const cv::Mat &inputImg, cv::Mat &outputMat) {
+    cv::Mat calc_e1(const cv::Mat &inputImg) {
     /** @brief Blurs, calculates sum of absolute values of gradients, adds them and converts the result to 32-bit C1.
     @param inputImg BGR input array
     @param outputMat output array containing sum of absolute gradients
     */
         int ddepth = CV_16S;
+        cv::Mat outputMat;
         if (inputImg.channels() == 3){
             cv::cvtColor(inputImg, outputMat, cv::COLOR_BGR2GRAY);
         }
@@ -25,9 +26,10 @@ namespace sc {
         cv::convertScaleAbs(gradX, absGradX);
         cv::convertScaleAbs(gradY, absGradY);
         cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, outputMat);
+        return outputMat;
     }
 
-    void verticalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &dst) {
+    cv::Mat verticalCumulativeMat(const cv::Mat &inputEnergyMat) {
     /** @brief sums from top to bottom in the DP manner: M(i,j) = e(i,j) + min(M(i-1,j-1), M(i-1,j), M(i-1, j+1))
     @param inputEnergyMat CV_8UC1 input array
     @param outputCumulativeMat CV_32SC1 output array containing cumulative sum for seams searching
@@ -36,6 +38,7 @@ namespace sc {
         int nCols = inputEnergyMat.cols;
         int left, middle, right;
 
+        cv::Mat dst;
         dst = inputEnergyMat.clone();
         dst.convertTo(dst, CV_32S);
 
@@ -52,13 +55,15 @@ namespace sc {
                 currRow[col] += std::min(left, std::min(middle, right));
             }
         }
+        return dst;
     }
 
-    void horizontalCumulativeMat(const cv::Mat &inputImg, cv::Mat &dst) {
+    cv::Mat horizontalCumulativeMat(const cv::Mat &inputImg) {
         cv::Mat rotated;
         cv::rotate(inputImg, rotated, cv::ROTATE_90_CLOCKWISE);
-        verticalCumulativeMat(rotated, dst);
-        cv::rotate(dst, dst, cv::ROTATE_90_COUNTERCLOCKWISE);
+        rotated = verticalCumulativeMat(rotated);
+        cv::rotate(rotated, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
+        return rotated;
     }
 
     std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat) {

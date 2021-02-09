@@ -4,19 +4,19 @@
 #include <opencv2/core/mat.hpp>
 namespace sc {
     //energyFuncs
-    void calc_e1(const cv::Mat &inputImg, cv::Mat &outputMat);
+    cv::Mat calc_e1(const cv::Mat &inputImg);
 
     //cumulative sums
-    void verticalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &outputCumulativeMat);
-    void horizontalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &outputCumulativeMat);
+    cv::Mat verticalCumulativeMat(const cv::Mat &inputEnergyMat);
+    cv::Mat horizontalCumulativeMat(const cv::Mat &inputEnergyMat);
 
     template<typename T>
-    void carveVerticalSeam(const cv::Mat &eMat,
-                              const std::vector<std::pair<int, int>> &seam, cv::Mat &outputMat) {
+    cv::Mat carveVerticalSeam(const cv::Mat &eMat,
+                              const std::vector<std::pair<int, int>> &seam) {
         int rows = eMat.rows;
         int cols = eMat.cols;
         bool isMultichannel = eMat.channels() > 1;
-        outputMat = cv::Mat(eMat.rows, eMat.cols-1, eMat.type(), cv::Scalar(0));
+        cv::Mat outputMat = cv::Mat(eMat.rows, eMat.cols-1, eMat.type(), cv::Scalar(0));
 
         std::vector<cv::Mat> inCh;
         std::vector<cv::Mat> outCh;
@@ -45,9 +45,9 @@ namespace sc {
             }
         }
         if (isMultichannel){
-            cv::merge(inCh, outputMat);
-            cv::merge(inCh, outputMat);
+            cv::merge(outCh, outputMat);
         }
+        return outputMat;
     }
 
     std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat);

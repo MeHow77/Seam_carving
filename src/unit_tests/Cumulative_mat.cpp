@@ -15,8 +15,7 @@ TEST(testMat, verticalSum){
     int summed[3][5] ={{1, 1, 5, 7, 4}, {6, 8, 9, 13, 14}, {17, 18, 21, 23, 28}};
     cv::Mat A = cv::Mat(3,5, CV_8UC1, data);
     cv::Mat summedA = cv::Mat(3,5, CV_32S, summed);
-    cv::Mat output;
-    sc::verticalCumulativeMat(A, output);
+    cv::Mat output = sc::verticalCumulativeMat(A);
     ASSERT_TRUE(compareMatrices(output,summedA));
 }
 
@@ -26,8 +25,7 @@ TEST(testMat, horizontalSum){
 
     cv::Mat A = cv::Mat(3,5, CV_8UC1, data);
     cv::Mat summedA = cv::Mat(3,5, CV_32S, summed);
-    cv::Mat output;
-    sc::horizontalCumulativeMat(A, output);
+    cv::Mat output = sc::horizontalCumulativeMat(A);
     ASSERT_TRUE(compareMatrices(output,summedA));
 }
 
@@ -59,7 +57,6 @@ TEST(testMat, carveSeam){
     int dataCarved[5][3] = {{3, 6, 5}, {12, 11, 10}, {15, 16, 18}, {25, 30, 25}, { 30, 26, 29}};
     cv::Mat carvedCorrect = cv::Mat(5,3, CV_32S, dataCarved);
 
-    cv::Mat carvedOutput;
-    sc::carveVerticalSeam<int>(I, seamToCut, carvedOutput);
+    cv::Mat carvedOutput = sc::carveVerticalSeam<int>(I, seamToCut);
     ASSERT_TRUE(compareMatrices(carvedOutput, carvedCorrect));
 }

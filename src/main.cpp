@@ -12,18 +12,18 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
-    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+    cv::Mat imageGray;
+    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 300;
+    int carveScale = 200;
     auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
-        sc::calc_e1(image, e1);
-        display_img(e1);
-        sc::verticalCumulativeMat(e1, m);
+        e1 = sc::calc_e1(imageGray);
+        m = sc::verticalCumulativeMat(e1);
         auto seam = sc::findVerticalSeam(m);
-        m = sc::carveVerticalSeam<int>(m, seam, 0);
-        image = sc::carveVerticalSeam<uchar>(image, seam, 0);
+        image = sc::carveVerticalSeam<uchar>(image, seam);
+        imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
