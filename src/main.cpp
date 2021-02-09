@@ -1,5 +1,6 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <chrono>
 
 #include "seam_carving.h"
 
@@ -14,12 +15,32 @@ int main(int, char** argv) {
     cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 700;
+    int carveScale = 1;
     for (int i=0; i<carveScale; i++){
+        auto start = std::chrono::high_resolution_clock::now();
         e1 = calc_e1(image);
+        auto stop = std::chrono::high_resolution_clock::now();
+        std::cout << "Time taken by function: "
+             << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
+
+        start = std::chrono::high_resolution_clock::now();
         m = verticalCumulativeMat(e1);
+        stop = std::chrono::high_resolution_clock::now();
+        std::cout << "Time taken by function: "
+                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
+
+        start = std::chrono::high_resolution_clock::now();
         auto seam = findVerticalSeam(m);
+        stop = std::chrono::high_resolution_clock::now();
+        std::cout << "Time taken by function: "
+                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
+
+        start = std::chrono::high_resolution_clock::now();
         image = carveVerticalSeam<uchar>(image, seam);
+        stop = std::chrono::high_resolution_clock::now();
+        std::cout << "Time taken by function: "
+                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
+
     }
     display_img(image);
 

@@ -16,6 +16,7 @@ TEST(testMat, verticalSum){
     cv::Mat A = cv::Mat(3,5, CV_8UC1, data);
     cv::Mat summedA = cv::Mat(3,5, CV_32S, summed);
     cv::Mat output = verticalCumulativeMat(A);
+    std::cout<<output<<std::endl;
     ASSERT_TRUE(compareMatrices(output,summedA));
 }
 

@@ -1,17 +1,17 @@
 #include <numeric>
 #include "seam_carving.h"
 cv::Mat calc_e1(const cv::Mat &image){
-    int ddepth = CV_32F;
+    int ddepth = CV_16S;
     int ksize = 5;
 
     cv::Mat srcBlur, srcGray, e1;
-    cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
+    //cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
 
     cv::Mat gradX, gradY;
     cv::Mat absGradX, absGradY;
 
-    cv::Scharr(srcBlur, gradX, ddepth, 1, 0);
-    cv::Scharr(srcBlur, gradY, ddepth, 0, 1);
+    cv::Scharr(image, gradX, ddepth, 1, 0);
+    cv::Scharr(image, gradY, ddepth, 0, 1);
 
     cv::convertScaleAbs(gradX, absGradX);
     cv::convertScaleAbs(gradY, absGradY);
@@ -43,21 +43,27 @@ cv::Mat verticalCumulativeMat(const cv::Mat &eMat){
     int nRows = eMat.rows;
     int nCols = eMat.cols;
 
-    cv::Mat res = eMat.clone();
-    res.convertTo(res, CV_32S);
-    const int* row;
-    std::vector<int> validVals;
+    cv::Mat res (eMat.rows, eMat.cols, CV_32S);
+    const auto* srcRow = eMat.ptr<uchar>(0);
+    int* prevRow = res.ptr<int>(0);
+    for (auto i=0; i<eMat.cols; i++){
+        prevRow[i] = srcRow[i];
+    }
 
+    std::vector<int> validVals;
+    int* currRow;
     for(int i=1; i<nRows; i++){
-        row = res.ptr<int>(i - 1);
-        validVals = {row[0], row[1]};
-        res.at<int>(i,0) += getMinimum(validVals);
+        prevRow = res.ptr<int>(i - 1);
+        currRow = res.ptr<int>(i);
+        srcRow = eMat.ptr<uchar>(i);
+        validVals = {prevRow[0], prevRow[1]};
+        currRow[0] = getMinimum(validVals) + srcRow[0];
         for(int j=1; j<nCols-1; j++) {
-            validVals = {row[j - 1], row[j], row[j+1]};
-            res.at<int>(i,j) += getMinimum(validVals);
+            validVals = {prevRow[j - 1], prevRow[j], prevRow[j+1]};
+            currRow[j] = getMinimum(validVals) + srcRow[j];
         }
-        validVals = {row[nCols-2], row[nCols-1]};
-        res.at<int>(i,nCols-1) += getMinimum(validVals);
+        validVals = {prevRow[nCols-2], prevRow[nCols-1]};
+        currRow[nCols-1] = getMinimum(validVals) + srcRow[nCols-1];
     }
     return res;
 }
