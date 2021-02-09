@@ -25,10 +25,10 @@ int main(int, char** argv) {
         image = sc::carveVerticalSeam<uchar>(image, seam);
         imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
     }
-    display_img(image);
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
     printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    display_img(image);
 
   return 0;
 }
