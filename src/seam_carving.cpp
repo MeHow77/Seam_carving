@@ -1,69 +1,64 @@
 #include "seam_carving.h"
 namespace sc {
-    void calc_e1(const cv::Mat &inputImg, cv::Mat &output) {
+    void calc_e1(const cv::Mat &inputImg, cv::Mat &outputMat) {
+    /** @brief Blurs, calculates sum of absolute values of gradients, adds them and converts the result to 32-bit C1.
+    @param inputImg BGR input array
+    @param outputMat output array containing sum of absolute gradients
+    */
         int ddepth = CV_16S;
+        if (inputImg.channels() == 3){
+            cv::cvtColor(inputImg, outputMat, cv::COLOR_BGR2GRAY);
+        }
+        else {
+            outputMat = inputImg.clone();
+        }
 
         cv::Mat inputBlur, inputGray;
-        cv::GaussianBlur(inputImg, inputBlur, cv::Size(3, 3), 0, 0);
+        cv::GaussianBlur(outputMat, inputBlur, cv::Size(3, 3), 0, 0);
 
         cv::Mat gradX, gradY;
         cv::Mat absGradX, absGradY;
-
-        cv::Scharr(inputImg, gradX, ddepth, 1, 0);
-        cv::Scharr(inputImg, gradY, ddepth, 0, 1);
-
+        //X,Y gradients
+        cv::Scharr(inputBlur, gradX, ddepth, 1, 0);
+        cv::Scharr(inputBlur, gradY, ddepth, 0, 1);
+        //
         cv::convertScaleAbs(gradX, absGradX);
         cv::convertScaleAbs(gradY, absGradY);
-
-        cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, output);
+        cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, outputMat);
     }
 
-    cv::Mat calcGrad(const cv::Mat &image) {
-        cv::Mat srcBlur;
-        cv::GaussianBlur(image, srcBlur, cv::Size(3, 3), 0, 0);
-        if (srcBlur.channels() == 3) {
-            cv::cvtColor(srcBlur, srcBlur, cv::COLOR_BGR2GRAY);
-        }
-        int kernelY[9] = {3, 0, -3, 10, 0, -10, 3, 0, 3};
-        float kernelX[9] = {3, 10, 3, 0, 0, 0, -3, -10, -3};
-        cv::Mat filterY(3, 3, CV_32F, kernelY);
-        cv::Mat filterX(3, 3, CV_32F, kernelX);
-        cv::Mat dstx, dsty, absY, absX, gradMat;
-        filter2D(srcBlur, dsty, CV_64F, filterY, cv::Point(-1, -1), 0, cv::BORDER_DEFAULT);
-        filter2D(srcBlur, dstx, CV_64F, filterX, cv::Point(-1, -1), 0, cv::BORDER_DEFAULT);
-        cv::convertScaleAbs(dstx, absX);
-        cv::convertScaleAbs(dsty, absY);
-        cv::add(absY, absX, gradMat);
-        return gradMat;
-    }
+    void verticalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &dst) {
+    /** @brief sums from top to bottom in the DP manner: M(i,j) = e(i,j) + min(M(i-1,j-1), M(i-1,j), M(i-1, j+1))
+    @param inputEnergyMat CV_8UC1 input array
+    @param outputCumulativeMat CV_32SC1 output array containing cumulative sum for seams searching
+    */
+        int nRows = inputEnergyMat.rows;
+        int nCols = inputEnergyMat.cols;
+        int left, middle, right;
 
-    cv::Mat verticalCumulativeMat(const cv::Mat &eMat) {
-        int nRows = eMat.rows;
-        int nCols = eMat.cols;
-        int a, b, c;
-
-        cv::Mat res(eMat.rows, eMat.cols, CV_32S, cv::Scalar(0));
-        eMat.row(0).copyTo(res.row(0));
+        dst = inputEnergyMat.clone();
+        dst.convertTo(dst, CV_32S);
 
         std::vector<int> validVals;
+        const int *prevRow;
+        int *currRow;
         for (int row = 1; row < nRows; row++) {
+            prevRow = dst.ptr<int>(row - 1);
+            currRow = dst.ptr<int>(row);
             for (int col = 0; col < nCols; col++) {
-                a = res.at<int>(row - 1, std::max(col - 1, 0));
-                b = res.at<int>(row - 1, col);
-                c = res.at<int>(row - 1, std::min(col + 1, nCols - 1));
-
-                res.at<int>(row, col) = eMat.at<int>(row, col) + std::min(a, std::min(b, c));
+                left = prevRow[std::max(col - 1, 0)];
+                middle = prevRow[col];
+                right = prevRow[std::min(col + 1, nCols - 1)];
+                currRow[col] += std::min(left, std::min(middle, right));
             }
         }
-        return res;
     }
 
-    cv::Mat horizontalCumulativeMat(const cv::Mat &image) {
+    void horizontalCumulativeMat(const cv::Mat &inputImg, cv::Mat &dst) {
         cv::Mat rotated;
-        cv::rotate(image, rotated, cv::ROTATE_90_CLOCKWISE);
-        rotated = verticalCumulativeMat(rotated);
-        cv::rotate(rotated, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
-        return rotated;
+        cv::rotate(inputImg, rotated, cv::ROTATE_90_CLOCKWISE);
+        verticalCumulativeMat(rotated, dst);
+        cv::rotate(dst, dst, cv::ROTATE_90_COUNTERCLOCKWISE);
     }
 
     std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat) {

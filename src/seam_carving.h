@@ -3,14 +3,12 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/mat.hpp>
 namespace sc {
-//energyFuncs
-    void calc_e1(const cv::Mat &inputImg, cv::Mat &output);
+    //energyFuncs
+    void calc_e1(const cv::Mat &inputImg, cv::Mat &outputMat);
 
-    cv::Mat calcGrad(const cv::Mat &image);
-
-    cv::Mat verticalCumulativeMat(const cv::Mat &eMat);
-
-    cv::Mat horizontalCumulativeMat(const cv::Mat &image);
+    //cumulative sums
+    void verticalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &outputCumulativeMat);
+    void horizontalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &outputCumulativeMat);
 
     template<typename T>
     cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, int>> &seam) {

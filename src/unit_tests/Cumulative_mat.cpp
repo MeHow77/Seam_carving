@@ -15,8 +15,8 @@ TEST(testMat, verticalSum){
     int summed[3][5] ={{1, 1, 5, 7, 4}, {6, 8, 9, 13, 14}, {17, 18, 21, 23, 28}};
     cv::Mat A = cv::Mat(3,5, CV_8UC1, data);
     cv::Mat summedA = cv::Mat(3,5, CV_32S, summed);
-    cv::Mat output = verticalCumulativeMat(A);
-    std::cout<<output<<std::endl;
+    cv::Mat output;
+    sc::verticalCumulativeMat(A, output);
     ASSERT_TRUE(compareMatrices(output,summedA));
 }
 
@@ -26,7 +26,8 @@ TEST(testMat, horizontalSum){
 
     cv::Mat A = cv::Mat(3,5, CV_8UC1, data);
     cv::Mat summedA = cv::Mat(3,5, CV_32S, summed);
-    cv::Mat output = horizontalCumulativeMat(A);
+    cv::Mat output;
+    sc::horizontalCumulativeMat(A, output);
     ASSERT_TRUE(compareMatrices(output,summedA));
 }
 
@@ -35,7 +36,7 @@ TEST(testMat, verticalSeam){
     cv::Mat I = cv::Mat(5,4, CV_32S, dataI);
     std::vector<std::pair<int, int>> seamResult {{0,2}, {1,3}, {2,2}, {3,1}, {4,0}};
 
-    auto seamOutput = findVerticalSeam(I);
+    auto seamOutput = sc::findVerticalSeam(I);
     bool res = seamOutput == seamResult;
     ASSERT_TRUE(res);
 }
@@ -45,7 +46,7 @@ TEST(testMat, horizontalSeam){
     cv::Mat I = cv::Mat(3,5, CV_32S, dataI);
     std::vector<std::pair<int, int>> seamResult {{0,0}, {0,1}, {0,2}, {0,3}, {0,4}};
 
-    auto seamOutput = findHorizontalSeam(I);
+    auto seamOutput = sc::findHorizontalSeam(I);
     bool res = seamOutput == seamResult;
     ASSERT_TRUE(res);
 }
@@ -58,6 +59,6 @@ TEST(testMat, carveSeam){
     int dataCarved[5][3] = {{3, 6, 5}, {12, 11, 10}, {15, 16, 18}, {25, 30, 25}, { 30, 26, 29}};
     cv::Mat carvedCorrect = cv::Mat(5,3, CV_32S, dataCarved);
 
-    auto carvedOutput = carveVerticalSeam(I, seamToCut);
+    auto carvedOutput = sc::carveVerticalSeam(I, seamToCut);
     ASSERT_TRUE(compareMatrices(carvedOutput, carvedCorrect));
 }

@@ -18,7 +18,8 @@ int main(int, char** argv) {
     auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
         sc::calc_e1(image, e1);
-        m = sc::verticalCumulativeMat(e1);
+        display_img(e1);
+        sc::verticalCumulativeMat(e1, m);
         auto seam = sc::findVerticalSeam(m);
         image = sc::carveVerticalSeam<uchar>(image, seam);
     }
