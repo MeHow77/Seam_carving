@@ -12,36 +12,19 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
-    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 1;
+    int carveScale = 300;
+    auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
-        auto start = std::chrono::high_resolution_clock::now();
-        e1 = calc_e1(image);
-        auto stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Time taken by function: "
-             << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
-
-        start = std::chrono::high_resolution_clock::now();
-        m = verticalCumulativeMat(e1);
-        stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Time taken by function: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
-
-        start = std::chrono::high_resolution_clock::now();
-        auto seam = findVerticalSeam(m);
-        stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Time taken by function: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
-
-        start = std::chrono::high_resolution_clock::now();
-        image = carveVerticalSeam<uchar>(image, seam);
-        stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Time taken by function: "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
-
+        sc::calc_e1(image, e1);
+        m = sc::verticalCumulativeMat(e1);
+        auto seam = sc::findVerticalSeam(m);
+        image = sc::carveVerticalSeam<uchar>(image, seam);
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+    printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
     display_img(image);
 
   return 0;
