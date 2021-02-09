@@ -5,7 +5,7 @@ cv::Mat calc_e1(const cv::Mat &image){
     int ksize = 5;
 
     cv::Mat srcBlur, srcGray, e1;
-    //cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
+    cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
 
     cv::Mat gradX, gradY;
     cv::Mat absGradX, absGradY;
@@ -42,28 +42,20 @@ cv::Mat calcGrad(const cv::Mat &image){
 cv::Mat verticalCumulativeMat(const cv::Mat &eMat){
     int nRows = eMat.rows;
     int nCols = eMat.cols;
+    int a, b, c;
 
-    cv::Mat res (eMat.rows, eMat.cols, CV_32S);
-    const auto* srcRow = eMat.ptr<uchar>(0);
-    int* prevRow = res.ptr<int>(0);
-    for (auto i=0; i<eMat.cols; i++){
-        prevRow[i] = srcRow[i];
-    }
+    cv::Mat res (eMat.rows, eMat.cols, CV_32S, cv::Scalar(0));
+    eMat.row(0).copyTo(res.row(0));
 
     std::vector<int> validVals;
-    int* currRow;
-    for(int i=1; i<nRows; i++){
-        prevRow = res.ptr<int>(i - 1);
-        currRow = res.ptr<int>(i);
-        srcRow = eMat.ptr<uchar>(i);
-        validVals = {prevRow[0], prevRow[1]};
-        currRow[0] = getMinimum(validVals) + srcRow[0];
-        for(int j=1; j<nCols-1; j++) {
-            validVals = {prevRow[j - 1], prevRow[j], prevRow[j+1]};
-            currRow[j] = getMinimum(validVals) + srcRow[j];
+    for(int row=1; row<nRows; row++){
+        for (int col=0; col<nCols; col++) {
+            a = res.at<int>(row-1, std::max(col-1, 0));
+            b = res.at<int>(row-1, col);
+            c = res.at<int>(row-1, std::min(col+1,  nCols-1));
+
+            res.at<int>(row, col) = eMat.at<int>(row, col) + std::min(a, std::min(b, c));
         }
-        validVals = {prevRow[nCols-2], prevRow[nCols-1]};
-        currRow[nCols-1] = getMinimum(validVals) + srcRow[nCols-1];
     }
     return res;
 }
