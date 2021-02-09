@@ -14,13 +14,23 @@ int main(int, char** argv) {
     cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 100;
+    e1 = calc_e1(image);
+    auto hog = calcHOG(image, e1);
+    m = verticalCumulativeMat(hog);
+
+    int carveScale = 500;
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i=0; i<carveScale; i++){
-        e1 = calc_e1(image);
-        m = verticalCumulativeMat(e1);
-        auto seam = findVerticalSeam(m);
-        image = carveVerticalSeam<uchar>(image, seam);
+
+    auto seamsStarts = partialSortIndexes(m.row(m.rows-1), carveScale);
+    std::vector<std::vector<std::pair<int,int>>> seams;
+    for (const auto seamStart:seamsStarts){
+        seams.push_back(findVerticalSeam(m, seamStart));
+//        image = carveVerticalSeam<uchar>(image, seams[i]);
+    }
+    for (int i=0; i<seamsStarts.size(); i++){
+        for (auto const &pixel : seams[i]) {
+            cv::circle(image, cv::Point(pixel.second, pixel.first), 1, CV_RGB(255, 0, 0), 1);
+        }
     }
     auto stop = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken by function: "

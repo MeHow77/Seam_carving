@@ -5,7 +5,7 @@
 
 //energyFuncs
 cv::Mat calc_e1(const cv::Mat &image);
-cv::Mat calcGrad(const cv::Mat &image);
+cv::Mat calcHOG(const cv::Mat &image, const cv::Mat &e1);
 
 cv::Mat verticalCumulativeMat(const cv::Mat &eMat);
 cv::Mat horizontalCumulativeMat(const cv::Mat &image);
@@ -27,8 +27,9 @@ cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, 
     }
     return carved;
 }
-std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat);
+//std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat);
 std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat);
+std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat, int minIdx);
 
 //utility
 std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange);

@@ -10,6 +10,7 @@ cv::Mat calc_e1(const cv::Mat &image){
     cv::Mat gradX, gradY;
     cv::Mat absGradX, absGradY;
 
+    srcBlur = image;
     cv::Scharr(srcBlur, gradX, ddepth, 1, 0);
     cv::Scharr(srcBlur, gradY, ddepth, 0, 1);
 
@@ -20,23 +21,13 @@ cv::Mat calc_e1(const cv::Mat &image){
     return e1;
 }
 
-cv::Mat calcGrad(const cv::Mat &image){
-    cv::Mat srcBlur;
-    cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
-    if (srcBlur.channels()==3){
-        cv::cvtColor(srcBlur, srcBlur, cv::COLOR_BGR2GRAY);
-    }
-    int kernelY[9] = {3,0,-3,10,0,-10,3,0,3};
-    float kernelX[9] = {3,10,3,0,0,0,-3,-10,-3};
-    cv::Mat filterY(3, 3, CV_32F, kernelY);
-    cv::Mat filterX(3, 3, CV_32F, kernelX);
-    cv::Mat dstx, dsty, absY, absX, gradMat;
-    filter2D(srcBlur,dsty, CV_64F,filterY, cv::Point( -1, -1 ),0, cv::BORDER_DEFAULT );
-    filter2D(srcBlur,dstx, CV_64F,filterX, cv::Point( -1, -1 ),0, cv::BORDER_DEFAULT );
-    cv::convertScaleAbs(dstx, absX);
-    cv::convertScaleAbs(dsty, absY);
-    cv::add(absY, absX, gradMat);
-    return gradMat;
+cv::Mat calcHOG(const cv::Mat &image, const cv::Mat &e1){
+    auto hog = cv::HOGDescriptor();
+    std::vector<float> descriptors;
+    hog.compute(image, descriptors, cv::Size(16,16), cv::Size(0,0));
+    auto maxHog = *std::max_element(descriptors.begin(), descriptors.end());
+    std::cout<<maxHog<<std::endl;
+    return e1/maxHog;
 }
 
 cv::Mat verticalCumulativeMat(const cv::Mat &eMat){
@@ -107,44 +98,44 @@ std::pair<int,int> validPair(const cv::Mat &eMat, std::pair<int,int> prevPair) {
      return std::make_pair(cRow, minCol);
 }
 
-std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat) {
-    cv::Mat rotated;
-    std::vector<std::pair<int,int>> seam;
-    cv::rotate(eMat, rotated, cv::ROTATE_90_CLOCKWISE);
-    seam = findVerticalSeam(rotated);
-    for(auto &p : seam){
-        int pRow = p.first;
-        int pCol = p.second;
-        p.second = pRow;
-        p.first = rotated.cols-1 - pCol;
-    }
-    return seam;
-}
-
-//std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat, int minIdx){
-//    auto lastRow = eMat.row(eMat.rows - 1);
+//std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat) {
+//    cv::Mat rotated;
 //    std::vector<std::pair<int,int>> seam;
-//    //int minIndex = getMinimumIndex(lastRow);
-//    seam.emplace_back(eMat.rows-1, minIdx); //seam's beginning
-//
-//    for (auto i=eMat.rows-2; i>=0; i--){
-//        try {
-//            seam.push_back(validPair(eMat, seam.back()));
-//        }catch (const std::runtime_error& e) {
-//            std::cout << e.what() << '\n';
-//        }
+//    cv::rotate(eMat, rotated, cv::ROTATE_90_CLOCKWISE);
+//    seam = findVerticalSeam(rotated);
+//    for(auto &p : seam){
+//        int pRow = p.first;
+//        int pCol = p.second;
+//        p.second = pRow;
+//        p.first = rotated.cols-1 - pCol;
 //    }
-//    std::reverse(seam.begin(), seam.end());
 //    return seam;
 //}
 
-//std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange) {
-//    std::vector<int> idx(v.size());
-//    iota(idx.begin(), idx.end(), 0);
-//    std::partial_sort(idx.begin(), idx.begin()+sortRange, idx.end(),
-//                      [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
-//    return idx;
-//}
+std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat, int minIdx){
+    auto lastRow = eMat.row(eMat.rows - 1);
+    std::vector<std::pair<int,int>> seam;
+    //int minIndex = getMinimumIndex(lastRow);
+    seam.emplace_back(eMat.rows-1, minIdx); //seam's beginning
+
+    for (auto i=eMat.rows-2; i>=0; i--){
+        try {
+            seam.push_back(validPair(eMat, seam.back()));
+        }catch (const std::runtime_error& e) {
+            std::cout << e.what() << '\n';
+        }
+    }
+    std::reverse(seam.begin(), seam.end());
+    return seam;
+}
+
+std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange) {
+    std::vector<int> idx(v.size());
+    iota(idx.begin(), idx.end(), 0);
+    std::partial_sort(idx.begin(), idx.begin()+sortRange, idx.end(),
+                      [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+    return std::vector<int>(idx.begin(), idx.begin()+sortRange);
+}
 
 cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, int>> &seam){
     int rows = eMat.rows;
