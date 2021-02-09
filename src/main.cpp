@@ -1,5 +1,6 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <chrono>
 
 #include "seam_carving.h"
 
@@ -11,31 +12,22 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
-    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+    cv::Mat imageGray;
+    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    e1 = calc_e1(image);
-    auto hog = calcHOG(image, e1);
-    m = verticalCumulativeMat(hog);
-
-    int carveScale = 500;
-    auto start = std::chrono::high_resolution_clock::now();
-
-    auto seamsStarts = partialSortIndexes(m.row(m.rows-1), carveScale);
-    std::vector<std::vector<std::pair<int,int>>> seams;
-    for (const auto seamStart:seamsStarts){
-        seams.push_back(findVerticalSeam(m, seamStart));
-//        image = carveVerticalSeam<uchar>(image, seams[i]);
+    int carveScale = 700;
+    auto begin = std::chrono::high_resolution_clock::now();
+    for (int i=0; i<carveScale; i++){
+        e1 = sc::calc_e1(imageGray);
+        m = sc::verticalCumulativeMat(e1);
+        auto seam = sc::findVerticalSeam(m);
+        imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
+        display_img(imageGray);
     }
-    for (int i=0; i<seamsStarts.size(); i++){
-        for (auto const &pixel : seams[i]) {
-            cv::circle(image, cv::Point(pixel.second, pixel.first), 1, CV_RGB(255, 0, 0), 1);
-        }
-    }
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::cout << "Time taken by function: "
-         << std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count() << " microseconds" << std::endl;
-    display_img(image);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+    printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
 
   return 0;
 }

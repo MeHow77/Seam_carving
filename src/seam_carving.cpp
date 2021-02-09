@@ -1,160 +1,123 @@
-#include <numeric>
 #include "seam_carving.h"
-cv::Mat calc_e1(const cv::Mat &image){
-    int ddepth = CV_16S;
-    int ksize = 5;
-
-    cv::Mat srcBlur, srcGray, e1;
-    cv::GaussianBlur(image, srcBlur, cv::Size(3,3), 0, 0);
-
-    cv::Mat gradX, gradY;
-    cv::Mat absGradX, absGradY;
-
-    srcBlur = image;
-    cv::Scharr(srcBlur, gradX, ddepth, 1, 0);
-    cv::Scharr(srcBlur, gradY, ddepth, 0, 1);
-
-    cv::convertScaleAbs(gradX, absGradX);
-    cv::convertScaleAbs(gradY, absGradY);
-
-    cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, e1);
-    return e1;
-}
-
-cv::Mat calcHOG(const cv::Mat &image, const cv::Mat &e1){
-    auto hog = cv::HOGDescriptor();
-    std::vector<float> descriptors;
-    hog.compute(image, descriptors, cv::Size(16,16), cv::Size(0,0));
-    auto maxHog = *std::max_element(descriptors.begin(), descriptors.end());
-    std::cout<<maxHog<<std::endl;
-    return e1/maxHog;
-}
-
-cv::Mat verticalCumulativeMat(const cv::Mat &eMat){
-    int nRows = eMat.rows;
-    int nCols = eMat.cols;
-
-    cv::Mat res = eMat.clone();
-    res.convertTo(res, CV_32S);
-    const int* row;
-    std::vector<int> validVals;
-
-    for(int i=1; i<nRows; i++){
-        row = res.ptr<int>(i - 1);
-        validVals = {row[0], row[1]};
-        res.at<int>(i,0) += getMinimum(validVals);
-        for(int j=1; j<nCols-1; j++) {
-            validVals = {row[j - 1], row[j], row[j+1]};
-            res.at<int>(i,j) += getMinimum(validVals);
+namespace sc {
+    cv::Mat calc_e1(const cv::Mat &inputImg) {
+    /** @brief Blurs, calculates sum of absolute values of gradients, adds them and converts the result to 32-bit C1.
+    @param inputImg BGR input array
+    @param outputMat output array containing sum of absolute gradients
+    */
+        int ddepth = CV_16S;
+        cv::Mat outputMat;
+        if (inputImg.channels() == 3){
+            cv::cvtColor(inputImg, outputMat, cv::COLOR_BGR2GRAY);
         }
-        validVals = {row[nCols-2], row[nCols-1]};
-        res.at<int>(i,nCols-1) += getMinimum(validVals);
+        else {
+            outputMat = inputImg.clone();
+        }
+
+        cv::Mat inputBlur, inputGray;
+        cv::GaussianBlur(outputMat, inputBlur, cv::Size(3, 3), 0, 0);
+
+        cv::Mat gradX, gradY;
+        cv::Mat absGradX, absGradY;
+        //X,Y gradients
+        cv::Scharr(inputBlur, gradX, ddepth, 1, 0);
+        cv::Scharr(inputBlur, gradY, ddepth, 0, 1);
+        //
+        cv::convertScaleAbs(gradX, absGradX);
+        cv::convertScaleAbs(gradY, absGradY);
+        cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, outputMat);
+        return outputMat;
     }
-    return res;
-}
 
-cv::Mat horizontalCumulativeMat(const cv::Mat &image){
-    cv::Mat rotated;
-    cv::rotate(image, rotated, cv::ROTATE_90_CLOCKWISE);
-    rotated = verticalCumulativeMat(rotated);
-    cv::rotate(rotated, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
-    return rotated;
-}
+    cv::Mat verticalCumulativeMat(const cv::Mat &inputEnergyMat) {
+    /** @brief sums from top to bottom in the DP manner: M(i,j) = e(i,j) + min(M(i-1,j-1), M(i-1,j), M(i-1, j+1))
+    @param inputEnergyMat CV_8UC1 input array
+    @param outputCumulativeMat CV_32SC1 output array containing cumulative sum for seams searching
+    */
+        int nRows = inputEnergyMat.rows;
+        int nCols = inputEnergyMat.cols;
+        int left, middle, right;
 
-std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat){
-    auto lastRow = eMat.row(eMat.rows - 1);
-    std::vector<std::pair<int,int>> seam;
-    int minIndex = getMinimumIndex<int>(lastRow);
-    seam.emplace_back(eMat.rows-1, minIndex); //seam's beginning
+        cv::Mat dst;
+        dst = inputEnergyMat.clone();
+        dst.convertTo(dst, CV_32S);
 
-    for (auto i=eMat.rows-2; i>=0; i--){
-        try {
-            seam.push_back(validPair(eMat, seam.back()));
-        }catch (const std::runtime_error& e) {
-            std::cout << e.what() << '\n';
+        std::vector<int> validVals;
+        const int *prevRow;
+        int *currRow;
+        for (int row = 1; row < nRows; row++) {
+            prevRow = dst.ptr<int>(row - 1);
+            currRow = dst.ptr<int>(row);
+            for (int col = 0; col < nCols; col++) {
+                left = prevRow[std::max(col - 1, 0)];
+                middle = prevRow[col];
+                right = prevRow[std::min(col + 1, nCols - 1)];
+                currRow[col] += std::min(left, std::min(middle, right));
+            }
         }
+        return dst;
     }
-    std::reverse(seam.begin(), seam.end());
-    return seam;
-}
-
-std::pair<int,int> validPair(const cv::Mat &eMat, std::pair<int,int> prevPair) {
-     int pRow = prevPair.first;
-     int pCol = prevPair.second;
-     int cRow = pRow-1;
-     int tCols = eMat.cols;
-
-     if (cRow < 0){
-         throw std::runtime_error("Invalid seam pair");
-     }
-     int minCol = pCol;
-     int minVal = eMat.at<int>(cRow, pCol);
-     if (pCol > 0 && eMat.at<int>(cRow, pCol-1) < minVal){
-         minCol = pCol-1;
-     }
-     if (pCol < tCols-1 && eMat.at<int>(cRow, pCol+1) < minVal){
-        minCol = pCol+1;
-     }
-     return std::make_pair(cRow, minCol);
-}
-
-//std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat) {
-//    cv::Mat rotated;
-//    std::vector<std::pair<int,int>> seam;
-//    cv::rotate(eMat, rotated, cv::ROTATE_90_CLOCKWISE);
-//    seam = findVerticalSeam(rotated);
-//    for(auto &p : seam){
-//        int pRow = p.first;
-//        int pCol = p.second;
-//        p.second = pRow;
-//        p.first = rotated.cols-1 - pCol;
-//    }
-//    return seam;
-//}
-
-std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat, int minIdx){
-    auto lastRow = eMat.row(eMat.rows - 1);
-    std::vector<std::pair<int,int>> seam;
-    //int minIndex = getMinimumIndex(lastRow);
-    seam.emplace_back(eMat.rows-1, minIdx); //seam's beginning
-
-    for (auto i=eMat.rows-2; i>=0; i--){
-        try {
-            seam.push_back(validPair(eMat, seam.back()));
-        }catch (const std::runtime_error& e) {
-            std::cout << e.what() << '\n';
-        }
+    cv::Mat horizontalCumulativeMat(const cv::Mat &inputImg) {
+        cv::Mat rotated;
+        cv::rotate(inputImg, rotated, cv::ROTATE_90_CLOCKWISE);
+        rotated = verticalCumulativeMat(rotated);
+        cv::rotate(rotated, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
+        return rotated;
     }
-    std::reverse(seam.begin(), seam.end());
-    return seam;
-}
 
-std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange) {
-    std::vector<int> idx(v.size());
-    iota(idx.begin(), idx.end(), 0);
-    std::partial_sort(idx.begin(), idx.begin()+sortRange, idx.end(),
-                      [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-    return std::vector<int>(idx.begin(), idx.begin()+sortRange);
-}
+    std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat) {
+        auto lastRow = eMat.row(eMat.rows - 1);
+        std::vector<std::pair<int, int>> seam;
+        int minIndex = getMinimumIndex<int>(lastRow);
+        seam.emplace_back(eMat.rows - 1, minIndex); //seam's beginning
 
-cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, int>> &seam){
-    int rows = eMat.rows;
-    int cols = eMat.cols;
-    cv::Mat carved (eMat.rows, eMat.cols-1, eMat.type());
-    for (int i = 0; i < rows; ++i){
-        auto* dest_row = carved.ptr<int>(i);
-        const auto* source_row = eMat.ptr<int>(i);
-        for (auto j=0; j < seam[i].second; j++){
-            dest_row[j] = source_row[j];
+        for (auto i = eMat.rows - 2; i >= 0; i--) {
+            try {
+                seam.push_back(validPair(eMat, seam.back()));
+            } catch (const std::runtime_error &e) {
+                std::cout << e.what() << '\n';
+            }
         }
-        for (auto j=seam[i].second; j < cols-1; j++){
-            dest_row[j] = source_row[j+1];
-        }
+        std::reverse(seam.begin(), seam.end());
+        return seam;
     }
-    return carved;
-}
 
-cv::Mat seamCarving(const cv::Mat& image, const cv::Size& out_size) {
-  (void)out_size;
-  return image;
+    std::pair<int, int> validPair(const cv::Mat &eMat, std::pair<int, int> prevPair) {
+        int pRow = prevPair.first;
+        int pCol = prevPair.second;
+        int cRow = pRow - 1;
+        int tCols = eMat.cols;
+
+        if (cRow < 0) {
+            throw std::runtime_error("Invalid seam pair");
+        }
+        int minCol = pCol;
+        int minVal = eMat.at<int>(cRow, pCol);
+        if (pCol > 0 && eMat.at<int>(cRow, pCol - 1) < minVal) {
+            minCol = pCol - 1;
+        }
+        if (pCol < tCols - 1 && eMat.at<int>(cRow, pCol + 1) < minVal) {
+            minCol = pCol + 1;
+        }
+        return std::make_pair(cRow, minCol);
+    }
+
+    std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat) {
+        cv::Mat rotated;
+        std::vector<std::pair<int, int>> seam;
+        cv::rotate(eMat, rotated, cv::ROTATE_90_CLOCKWISE);
+        seam = findVerticalSeam(rotated);
+        for (auto &p : seam) {
+            int pRow = p.first;
+            int pCol = p.second;
+            p.second = pRow;
+            p.first = rotated.cols - 1 - pCol;
+        }
+        return seam;
+    }
+
+    cv::Mat seamCarving(const cv::Mat &image, const cv::Size &out_size) {
+        (void) out_size;
+        return image;
+    }
 }
