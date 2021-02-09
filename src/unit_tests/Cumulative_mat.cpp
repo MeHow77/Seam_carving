@@ -59,6 +59,7 @@ TEST(testMat, carveSeam){
     int dataCarved[5][3] = {{3, 6, 5}, {12, 11, 10}, {15, 16, 18}, {25, 30, 25}, { 30, 26, 29}};
     cv::Mat carvedCorrect = cv::Mat(5,3, CV_32S, dataCarved);
 
-    auto carvedOutput = sc::carveVerticalSeam(I, seamToCut);
+    cv::Mat carvedOutput;
+    sc::carveVerticalSeam<int>(I, seamToCut, carvedOutput);
     ASSERT_TRUE(compareMatrices(carvedOutput, carvedCorrect));
 }

@@ -112,48 +112,6 @@ namespace sc {
         return seam;
     }
 
-//std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat, int minIdx){
-//    auto lastRow = eMat.row(eMat.rows - 1);
-//    std::vector<std::pair<int,int>> seam;
-//    //int minIndex = getMinimumIndex(lastRow);
-//    seam.emplace_back(eMat.rows-1, minIdx); //seam's beginning
-//
-//    for (auto i=eMat.rows-2; i>=0; i--){
-//        try {
-//            seam.push_back(validPair(eMat, seam.back()));
-//        }catch (const std::runtime_error& e) {
-//            std::cout << e.what() << '\n';
-//        }
-//    }
-//    std::reverse(seam.begin(), seam.end());
-//    return seam;
-//}
-
-//std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange) {
-//    std::vector<int> idx(v.size());
-//    iota(idx.begin(), idx.end(), 0);
-//    std::partial_sort(idx.begin(), idx.begin()+sortRange, idx.end(),
-//                      [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
-//    return idx;
-//}
-
-    cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, int>> &seam) {
-        int rows = eMat.rows;
-        int cols = eMat.cols;
-        cv::Mat carved(eMat.rows, eMat.cols - 1, eMat.type());
-        for (int i = 0; i < rows; ++i) {
-            auto *dest_row = carved.ptr<int>(i);
-            const auto *source_row = eMat.ptr<int>(i);
-            for (auto j = 0; j < seam[i].second; j++) {
-                dest_row[j] = source_row[j];
-            }
-            for (auto j = seam[i].second; j < cols - 1; j++) {
-                dest_row[j] = source_row[j + 1];
-            }
-        }
-        return carved;
-    }
-
     cv::Mat seamCarving(const cv::Mat &image, const cv::Size &out_size) {
         (void) out_size;
         return image;

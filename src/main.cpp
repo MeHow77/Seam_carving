@@ -12,6 +12,7 @@ void display_img(const cv::Mat &image){
 int main(int, char** argv) {
     const auto in = cv::imread(argv[1]);
     auto image = in.clone();
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
     int carveScale = 300;
@@ -21,7 +22,8 @@ int main(int, char** argv) {
         display_img(e1);
         sc::verticalCumulativeMat(e1, m);
         auto seam = sc::findVerticalSeam(m);
-        image = sc::carveVerticalSeam<uchar>(image, seam);
+        m = sc::carveVerticalSeam<int>(m, seam, 0);
+        image = sc::carveVerticalSeam<uchar>(image, seam, 0);
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);

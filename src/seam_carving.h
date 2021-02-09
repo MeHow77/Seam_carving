@@ -11,21 +11,43 @@ namespace sc {
     void horizontalCumulativeMat(const cv::Mat &inputEnergyMat, cv::Mat &outputCumulativeMat);
 
     template<typename T>
-    cv::Mat carveVerticalSeam(const cv::Mat &eMat, const std::vector<std::pair<int, int>> &seam) {
+    void carveVerticalSeam(const cv::Mat &eMat,
+                              const std::vector<std::pair<int, int>> &seam, cv::Mat &outputMat) {
         int rows = eMat.rows;
         int cols = eMat.cols;
-        cv::Mat carved(eMat.rows, eMat.cols - 1, eMat.type());
-        for (int i = 0; i < rows; ++i) {
-            auto *dest_row = carved.ptr<T>(i);
-            const auto *source_row = eMat.ptr<T>(i);
-            for (auto j = 0; j < seam[i].second; j++) {
-                dest_row[j] = source_row[j];
-            }
-            for (auto j = seam[i].second; j < cols - 1; j++) {
-                dest_row[j] = source_row[j + 1];
+        bool isMultichannel = eMat.channels() > 1;
+        outputMat = cv::Mat(eMat.rows, eMat.cols-1, eMat.type(), cv::Scalar(0));
+
+        std::vector<cv::Mat> inCh;
+        std::vector<cv::Mat> outCh;
+        if (isMultichannel){
+            cv::split(eMat, inCh);
+            cv::split(outputMat, outCh);
+        }
+        else{
+            inCh.push_back(eMat);
+            outCh.push_back(outputMat);
+        }
+        cv::Mat *currOutCh;
+        cv::Mat *currInCh;
+        for(auto c=0; c<inCh.size(); c++) {
+            currOutCh = &outCh[c];
+            currInCh = &inCh[c];
+            for (int i = 0; i < rows; ++i) {
+                auto *dest_row = currOutCh->ptr<T>(i);
+                const auto *source_row = currInCh->ptr<T>(i);
+                for (auto j = 0; j < seam[i].second; j++) {
+                    dest_row[j] = source_row[j];
+                }
+                for (auto j = seam[i].second; j < cols - 1; j++) {
+                    dest_row[j] = source_row[j + 1];
+                }
             }
         }
-        return carved;
+        if (isMultichannel){
+            cv::merge(inCh, outputMat);
+            cv::merge(inCh, outputMat);
+        }
     }
 
     std::vector<std::pair<int, int>> findVerticalSeam(const cv::Mat &eMat);
