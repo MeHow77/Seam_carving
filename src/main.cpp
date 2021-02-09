@@ -16,15 +16,16 @@ int main(int, char** argv) {
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 700;
+    int carveScale = 300;
     auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
         e1 = sc::calc_e1(imageGray);
         m = sc::verticalCumulativeMat(e1);
         auto seam = sc::findVerticalSeam(m);
+        image = sc::carveVerticalSeam<uchar>(image, seam);
         imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
-        display_img(imageGray);
     }
+    display_img(image);
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
     printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);

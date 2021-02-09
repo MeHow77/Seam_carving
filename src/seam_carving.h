@@ -55,14 +55,6 @@ namespace sc {
     std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat);
 
 //utility
-    std::vector<int> partialSortIndexes(const std::vector<int> &v, int sortRange);
-
-    template<typename T>
-    T getMinimum(const std::vector<T> &vals) {
-        auto min = *std::min_element(vals.begin(), vals.end());
-        return min;
-    }
-
     template<typename T>
     int getMinimumIndex(const std::vector<T> &vals) {
         auto min = std::min_element(vals.begin(), vals.end()) - vals.begin();
