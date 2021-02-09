@@ -20,16 +20,15 @@ int main(int, char** argv) {
     auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
         e1 = sc::calc_e1(imageGray);
-        m = sc::horizontalCumulativeMat(e1);
-        auto seam = sc::findHorizontalSeam(m);
-        display_img(image);
-        image = sc::carveHorizontalSeam<uchar>(image, seam);
-        imageGray = sc::carveHorizontalSeam<uchar>(imageGray, seam);
+        m = sc::verticalCumulativeMat(e1);
+        auto seam = sc::findVerticalSeam(m);
+        image = sc::carveVerticalSeam<uchar>(image, seam);
+        imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
     }
-    display_img(image);
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
     printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    display_img(image);
 
   return 0;
 }
