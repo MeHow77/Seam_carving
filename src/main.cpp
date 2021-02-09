@@ -16,14 +16,15 @@ int main(int, char** argv) {
     cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
     cv::Mat e1, m;
 
-    int carveScale = 300;
+    int carveScale = 200;
     auto begin = std::chrono::high_resolution_clock::now();
     for (int i=0; i<carveScale; i++){
         e1 = sc::calc_e1(imageGray);
-        m = sc::verticalCumulativeMat(e1);
-        auto seam = sc::findVerticalSeam(m);
-        image = sc::carveVerticalSeam<uchar>(image, seam);
-        imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
+        m = sc::horizontalCumulativeMat(e1);
+        auto seam = sc::findHorizontalSeam(m);
+        display_img(image);
+        image = sc::carveHorizontalSeam<uchar>(image, seam);
+        imageGray = sc::carveHorizontalSeam<uchar>(imageGray, seam);
     }
     display_img(image);
     auto end = std::chrono::high_resolution_clock::now();

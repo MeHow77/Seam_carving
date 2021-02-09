@@ -120,14 +120,17 @@ namespace sc {
         std::vector<std::pair<int, int>> seam;
         cv::rotate(eMat, rotated, cv::ROTATE_90_CLOCKWISE);
         seam = findVerticalSeam(rotated);
-        //rotate back a seam
-        for (auto &p : seam) {
+        return seam;
+    }
+    std::vector<std::pair<int, int>> rotSeamCntClk(const std::vector<std::pair<int, int>> &seam, const int &colsNo){
+        auto rotatedSeam = seam;
+        for (auto &p : rotatedSeam) {
             int pRow = p.first;
             int pCol = p.second;
             p.second = pRow;
-            p.first = rotated.cols - 1 - pCol;
+            p.first = colsNo - 1 - pCol;
         }
-        return seam;
+        return rotatedSeam;
     }
 
     cv::Mat seamCarving(const cv::Mat &image, const cv::Size &out_size) {
