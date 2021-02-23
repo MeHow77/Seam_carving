@@ -6,6 +6,11 @@ This repository contains a working CMake based project you may use for writing y
 
 All packages necessary to build the project are defined inside the [Dockerfile](Dockerfile "Dockerfile") (Ubuntu 20.04 based).
 
+## Remote debugging in CLion with docker compose
+```
+All below listed commands can be used for remote GBD debugging. How to do it is presented at this blog: https://austinmorlan.com/posts/docker_clion_development/
+```
+
 ### Docker Container
 
 Building the docker image:

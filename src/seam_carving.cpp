@@ -114,7 +114,7 @@ namespace sc {
     std::vector<std::pair<int, int>> findHorizontalSeam(const cv::Mat &eMat) {
     /** @brief rotates energy matrix and uses findVerticalSeam(...) to find a horizontal seam
     @param eMat: CV_32SC1 input array of cumulative energy
-    @return seam: vector of std::pairs<row,col>; seam's path
+    @return seam: vector of std::pairs<row,col>; seam's path in clockwise rotated orientation
     */
         cv::Mat rotated;
         std::vector<std::pair<int, int>> seam;
@@ -122,19 +122,45 @@ namespace sc {
         seam = findVerticalSeam(rotated);
         return seam;
     }
-    std::vector<std::pair<int, int>> rotSeamCntClk(const std::vector<std::pair<int, int>> &seam, const int &colsNo){
-        auto rotatedSeam = seam;
-        for (auto &p : rotatedSeam) {
-            int pRow = p.first;
-            int pCol = p.second;
-            p.second = pRow;
-            p.first = colsNo - 1 - pCol;
+
+    cv::Mat seamCarving(const cv::Mat &in, const int &carveSize, const int &isVertCarve) {
+        /** @brief reduces size for carveSize pixels in vertical/horizontal axis;
+        @param in: CV_32SC3 input image in RBG
+        @param carveSize: number of seams to carve
+        @param verticalCarve: indicates if images will be carved in vertical or horizontal axis
+        @return image: CV_32SC3 carved input image by carveSize rows/columns
+        */
+        auto image = in.clone();
+        cv::Mat imageGray;
+        cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
+        if(isVertCarve){
+            return sc::verticalSeamCarving(image, imageGray, carveSize);
         }
-        return rotatedSeam;
+        else{
+            return sc::horizontalSeamCarving(image, imageGray, carveSize);
+        }
     }
 
-    cv::Mat seamCarving(const cv::Mat &image, const cv::Size &out_size) {
-        (void) out_size;
+    cv::Mat verticalSeamCarving(cv::Mat &image, cv::Mat &imageGray, const int &carveSize){
+        cv::Mat e1, m;
+        for (int i=0; i<carveSize; i++){
+            e1 = sc::calc_e1(imageGray);
+            m = sc::verticalCumulativeMat(e1);
+            auto seam = sc::findVerticalSeam(m);
+            image = sc::carveVerticalSeam<uchar>(image, seam);
+            imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
+        }
+        return image;
+    }
+    cv::Mat horizontalSeamCarving(cv::Mat &image, cv::Mat &imageGray, const int &carveSize){
+        cv::Mat e1, m;
+        for (int i=0; i<carveSize; i++){
+            e1 = sc::calc_e1(imageGray);
+            m = sc::horizontalCumulativeMat(e1);
+            auto seam = sc::findHorizontalSeam(m);
+            image = sc::carveHorizontalSeam<uchar>(image, seam);
+            imageGray = sc::carveHorizontalSeam<uchar>(imageGray, seam);
+        }
         return image;
     }
 }

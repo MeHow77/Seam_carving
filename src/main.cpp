@@ -10,24 +10,38 @@ void display_img(const cv::Mat &image){
     cv::waitKey(0);
 }
 int main(int, char** argv) {
+    //SIMPLE INTERFACE
     const auto in = cv::imread(argv[1]);
-    auto image = in.clone();
-    cv::Mat imageGray;
-    cv::cvtColor(image, imageGray, cv::COLOR_BGR2GRAY);
-    cv::Mat e1, m;
-
-    int carveScale = 200;
-    auto begin = std::chrono::high_resolution_clock::now();
-    for (int i=0; i<carveScale; i++){
-        e1 = sc::calc_e1(imageGray);
-        m = sc::verticalCumulativeMat(e1);
-        auto seam = sc::findVerticalSeam(m);
-        image = sc::carveVerticalSeam<uchar>(image, seam);
-        imageGray = sc::carveVerticalSeam<uchar>(imageGray, seam);
+    if (in.empty()){
+        std::cout<<"Image reading failed, returning";
+        return 0;
     }
+    int isVertical = 0;
+    std::cout<<"Insert 1 for width reduction or 0 for high reduction"<<std::endl;
+    std::cin >> isVertical;
+
+    int carveSize = 0;
+    std::cout<<"Insert number of pixels to carve"<<std::endl;
+    std::cin>>carveSize;
+
+    if (isVertical){
+        if (carveSize >= in.rows){
+            std::cout<<"Number of rows to carve exceeds current size, returning"<<std::endl;
+            return 0;
+        }
+    }else{
+        if (carveSize >= in.cols){
+            std::cout<<"Number of columns to carve exceeds current size, returning"<<std::endl;
+            return 0;
+        }
+    }
+
+    auto begin = std::chrono::high_resolution_clock::now();
+    auto image = sc::seamCarving(in, carveSize, isVertical);
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-    printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    printf("Image carved in: %.3f seconds.\n", elapsed.count() * 1e-9);
+
     display_img(image);
 
   return 0;

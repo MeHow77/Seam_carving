@@ -78,9 +78,10 @@ namespace sc {
         auto min = std::min_element(vals.begin(), vals.end()) - vals.begin();
         return min;
     }
-    std::vector<std::pair<int, int>> rotSeamCntClk(const std::vector<std::pair<int, int>> &seam, const int &colsNo);
 
     std::pair<int, int> validPair(const cv::Mat &eMat, std::pair<int, int> prevPair);
 
-    cv::Mat seamCarving(const cv::Mat &image, const cv::Size &out_size);
+    cv::Mat seamCarving(const cv::Mat &in, const int &carveSize, const int &isVertCarve);
+    cv::Mat verticalSeamCarving(cv::Mat &image, cv::Mat &imageGray, const int &carveSize);
+    cv::Mat horizontalSeamCarving(cv::Mat &image, cv::Mat &imageGray, const int &carveSize);
 }
