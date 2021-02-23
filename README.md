@@ -53,19 +53,19 @@ Example images are located inside the [examples/](examples/ "Example input image
 
 # Results
 Original image
-![jungle original](https://github.com/MeHow77/Seam_carving/examples/master/jungle.jpg)
+![jungle original](examples/jungle.jpg "jungle.jpg")
 
 Carved 200 pixels in width
-![jungle carved](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_jungle.jpg)
+![jungle carved](carved_images/carved_jungle.jpg "carved_jungle.jpg")
 
 Original image
-![original castle](https://github.com/MeHow77/Seam_carving/examples/castle/jungle.jpg?raw=true)
+![original castle](examples/castle.jpg "castle.jpg")
 
 Carved 600 pixels in width
-![carved castle](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_castle.jpg?raw=true)
+![original castle](carved_images/carved_castle.jpg "carved_castle.png")
 
 Original image
-![original museum](https://github.com/MeHow77/Seam_carving/examples/master/museum.jpg?raw=true)
+![original castle](examples/museum.jpg "museum.jpg")
 
 Carved 350 pixels in hight
-![carved museum](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_museum.jpg?raw=true)
+![original castle](carved_images/carved_museum.jpg "carved_museum.jpg")
