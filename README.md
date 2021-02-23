@@ -7,9 +7,7 @@ This repository contains a working CMake based project you may use for writing y
 All packages necessary to build the project are defined inside the [Dockerfile](Dockerfile "Dockerfile") (Ubuntu 20.04 based).
 
 ## Remote debugging in CLion with docker compose
-```
 All below listed commands can be used for remote GBD debugging. How to do it is presented at this blog: https://austinmorlan.com/posts/docker_clion_development/
-```
 
 ### Docker Container
 
@@ -52,3 +50,22 @@ The `seamCarving` function defined inside the [seam_carving.cpp](src/seam_carvin
 ## Examples
 
 Example images are located inside the [examples/](examples/ "Example input images") directory.
+
+# Results
+Original image
+![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/jungle.jpg?raw=true)
+
+Carved 200 pixels in width
+![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/carved_jungle.jpg?raw=true)
+
+Original image
+![alt text](https://github.com/MeHow77/Seam_carving/examples/castle/jungle.jpg?raw=true)
+
+Carved 600 pixels in width
+![alt text](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_castle.jpg?raw=true)
+
+Original image
+![alt text](https://github.com/MeHow77/Seam_carving/examples/master/museum.jpg?raw=true)
+
+Carved 350 pixels in hight
+![alt text](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_museum.jpg?raw=true)
