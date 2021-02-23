@@ -53,10 +53,11 @@ Example images are located inside the [examples/](examples/ "Example input image
 
 # Results
 Original image
-![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/jungle.jpg?raw=true)
+![alt text](https://github.com/MeHow77/Seam_carving/examples/master/jungle.jpg?raw=true)
 
 Carved 200 pixels in width
-![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/carved_jungle.jpg?raw=true)
+![alt text](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_jungle.jpg?raw=true)
+>>>>>>> 0d19455859b388aa96f74e1a29ec400f062c2d3d
 
 Original image
 ![alt text](https://github.com/MeHow77/Seam_carving/examples/castle/jungle.jpg?raw=true)
