@@ -53,19 +53,19 @@ Example images are located inside the [examples/](examples/ "Example input image
 
 # Results
 Original image
-![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/jungle.jpg?raw=true)
+![jungle original](https://github.com/MeHow77/Seam_carving/examples/master/jungle.jpg)
 
 Carved 200 pixels in width
-![alt text](https://github.com/MeHow77/Seam_carving/blob/master/examples/carved_jungle.jpg?raw=true)
+![jungle carved](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_jungle.jpg)
 
 Original image
-![alt text](https://github.com/MeHow77/Seam_carving/examples/castle/jungle.jpg?raw=true)
+![original castle](https://github.com/MeHow77/Seam_carving/examples/castle/jungle.jpg?raw=true)
 
 Carved 600 pixels in width
-![alt text](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_castle.jpg?raw=true)
+![carved castle](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_castle.jpg?raw=true)
 
 Original image
-![alt text](https://github.com/MeHow77/Seam_carving/examples/master/museum.jpg?raw=true)
+![original museum](https://github.com/MeHow77/Seam_carving/examples/master/museum.jpg?raw=true)
 
 Carved 350 pixels in hight
-![alt text](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_museum.jpg?raw=true)
+![carved museum](https://github.com/MeHow77/Seam_carving/carved_images/master/carved_museum.jpg?raw=true)
