@@ -62,7 +62,7 @@ Original image
 ![original castle](examples/castle.jpg "castle.jpg")
 
 Carved 600 pixels in width
-![original castle](carved_images/carved_castle.jpg "carved_castle.jpg")
+![original castle](carved_images/carved_castle.png "carved_castle.png")
 
 Original image
 ![original castle](examples/museum.jpg "museum.jpg")
